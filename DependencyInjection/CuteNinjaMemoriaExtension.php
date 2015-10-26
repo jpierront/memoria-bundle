@@ -22,6 +22,14 @@ class CuteNinjaMemoriaExtension extends Extension
         $configuration = new Configuration();
         $config = $this->processConfiguration($configuration, $configs);
 
+        if(!empty($config['base_dir'])) {
+            $container->setParameter('base_dir', $config['base_dir']);
+        }
+
+        if(!empty($config['fixtures'])) {
+            $container->setParameter('fixtures', $config['fixtures']);
+        }
+
         $loader = new Loader\YamlFileLoader($container, new FileLocator(__DIR__.'/../Resources/config'));
         $loader->load('services.yml');
     }
