@@ -1,0 +1,36 @@
+{
+  "name": "cuteninja/memoria-bundle",
+  "type": "symfony-bundle",
+  "description": "Common code fixtures handling for Cute-Ninja projects (API handler, etc)",
+  "homepage": "https://github.com/Cute-Ninja/memoria-bundle",
+  "keywords": [
+    "api",
+    "common"
+  ],
+  "authors": [
+    {
+      "name": "Ghriim"
+    }
+  ],
+  "require": {
+    "php": ">=5.3.9",
+    "symfony/symfony": "2.7.*",
+    "doctrine/orm": "^2.4.8",
+    "doctrine/doctrine-bundle": "~1.4",
+    "symfony/monolog-bundle": "~2.4",
+    "sensio/distribution-bundle": "~4.0",
+    "sensio/framework-extra-bundle": "^3.0.2",
+    "incenteev/composer-parameter-handler": "~2.0"
+  },
+  "require-dev": {
+    "doctrine/doctrine-bundle": "~1.3",
+    "symfony/yaml": "~2.3",
+    "symfony/validator": "~2.3",
+    "behat/symfony2-extension": "2.1.*",
+    "h4cc/alice-fixtures-bundle": "^0.5.1"
+  },
+  "autoload": {
+    "psr-4": { "CuteNinja\\MemoriaBundle\\": "" }
+  },
+  "license": "proprietary"
+}
