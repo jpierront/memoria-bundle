@@ -18,11 +18,22 @@ class Configuration implements ConfigurationInterface
     public function getConfigTreeBuilder()
     {
         $treeBuilder = new TreeBuilder();
-        $rootNode = $treeBuilder->root('cute_ninja_common');
+        $rootNode    = $treeBuilder->root('cute_ninja_memoria');
 
-        // Here you should define the parameters that are allowed to
-        // configure your bundle. See the documentation linked above for
-        // more information on that topic.
+        $rootNode
+            ->children()
+                ->scalarNode('base_dir')
+                ->end()
+                ->arrayNode('fixtures')
+                    ->prototype('array')
+                        ->children()
+                            ->scalarNode('resource')
+                                ->isRequired(true)
+                            ->end()
+                        ->end()
+                    ->end()
+                ->end()
+            ->end();
 
         return $treeBuilder;
     }
