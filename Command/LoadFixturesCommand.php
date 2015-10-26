@@ -66,16 +66,12 @@ class LoadFixturesCommand extends ContainerAwareCommand
      */
     private function getFixturesFiles()
     {
-        $baseDir = $this->getContainer()->get('kernel')->getRootDir() . '/../src/CuteNinja/Bundle/';
+        $baseDir = $this->getContainer()->getParameter('base_dir');
+        $files = array();
+        foreach($this->getContainer()->getParameter('fixtures') as $fixture) {
+            $files[] = $baseDir . $fixture['resource'];
+        }
 
-        return array(
-            $baseDir . 'RealmBundle/Resources/DataFixture/factions.yml',
-            $baseDir . 'RealmBundle/Resources/DataFixture/locations.yml',
-
-            $baseDir . 'UserBundle/Resources/DataFixture/users.yml',
-            $baseDir . 'CharacterBundle/Resources/DataFixture/characterClasses.yml',
-            $baseDir . 'CharacterBundle/Resources/DataFixture/characters.yml',
-            $baseDir . 'CharacterBundle/Resources/DataFixture/characterHasCharacterClasses.yml',
-        );
+        return $files;
     }
 }
