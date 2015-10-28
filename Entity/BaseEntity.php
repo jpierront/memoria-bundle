@@ -35,6 +35,11 @@ class BaseEntity
      */
     protected $creation;
 
+    public function __construct()
+    {
+        $this->creation = new \DateTime();
+    }
+
     /**
      * @return string
      */
