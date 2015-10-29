@@ -10,7 +10,7 @@ use Symfony\Component\Validator\Constraints as Assert;
  *
  * @package CuteNinja\MemoriaBundle\Entity
  */
-class BaseEntity
+abstract class BaseEntity
 {
     const STATUS_ACTIVE = 'active';
     const STATUS_INACTIVE = 'inactive';
