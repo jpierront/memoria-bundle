@@ -12,13 +12,4 @@ class CuteNinjaMemoriaBundle extends Bundle
     {
         parent::build($container);
     }
-
-    public function boot()
-    {
-        /** @var EntityManager $entityManager */
-        $entityManager = $this->container->get('doctrine.orm.default_entity_manager');
-        $platform      = $entityManager->getConnection()->getDatabasePlatform();
-
-        $platform->registerDoctrineTypeMapping('enum', 'string');
-    }
 }
