@@ -1,4 +1,5 @@
 CuteNinja\MemoriaBundle\Entity\BaseEntity:
+    type: mappedSuperclass
     fields:
         status:
             type: string
