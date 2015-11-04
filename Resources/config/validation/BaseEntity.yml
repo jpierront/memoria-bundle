@@ -1,0 +1,10 @@
+CuteNinja\MemoriaBundle\Entity\BaseEntity:
+    properties:
+        status:
+            - NotNull: ~
+            - Choice:
+                choices: [active, inactive]
+        creation:
+            - NotNull: ~
+            - Type:
+                type: \DateTime

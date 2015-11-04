@@ -2,9 +2,6 @@
 
 namespace CuteNinja\MemoriaBundle\Entity;
 
-use Doctrine\ORM\Mapping as ORM;
-use Symfony\Component\Validator\Constraints as Assert;
-
 /**
  * Class BaseEntity
  *
@@ -17,21 +14,11 @@ abstract class BaseEntity
 
     /**
      * @var string $status
-     *
-     * @ORM\Column(name="status", type="string", columnDefinition="ENUM('active', 'inactive')", length=25, nullable=false)
-     *
-     * @Assert\NotBlank()
-     * @Assert\Choice(choices={"active", "inactive"})
      */
     protected $status = self::STATUS_ACTIVE;
 
     /**
      * @var string $status
-     *
-     * @ORM\Column(name="creation", type="datetime", nullable=false)
-     *
-     * @Assert\NotNull()
-     * @Assert\Type(type="DateTime")
      */
     protected $creation;
 

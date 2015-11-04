@@ -1,7 +1,7 @@
 {
   "name": "cuteninja/memoria-bundle",
   "type": "symfony-bundle",
-  "description": "Common code fixtures handling for Cute-Ninja projects (API handler, etc)",
+  "description": "Common code handling fixtures for Cute-Ninja projects (Fixtures declared in config.yml, Command to load DB)",
   "homepage": "https://github.com/Cute-Ninja/memoria-bundle",
   "keywords": [
     "api",
