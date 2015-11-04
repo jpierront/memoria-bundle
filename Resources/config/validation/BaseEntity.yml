@@ -8,3 +8,7 @@ CuteNinja\MemoriaBundle\Entity\BaseEntity:
             - NotNull: ~
             - Type:
                 type: \DateTime
+        lastUpdate:
+            - NotNull: ~
+            - Type:
+                type: \DateTime

@@ -18,14 +18,14 @@ abstract class BaseEntity
     protected $status = self::STATUS_ACTIVE;
 
     /**
-     * @var string $status
+     * @var \DateTime $creation
      */
     protected $creation;
 
-    public function __construct()
-    {
-        $this->creation = new \DateTime();
-    }
+    /**
+     * @var \DateTime $lastUpdate
+     */
+    protected $lastUpdate;
 
     /**
      * @return string
@@ -62,8 +62,41 @@ abstract class BaseEntity
      */
     public function setCreation(\DateTime $creation)
     {
-        $this->creation = $creation ? $creation : new \DateTime();
+        $this->creation = $creation;
 
         return $this;
+    }
+
+    /**
+     * @return \DateTime
+     */
+    public function getLastUpdate()
+    {
+        return $this->lastUpdate;
+    }
+
+    /**
+     * @param \DateTime $lastUpdate
+     *
+     * @return $this
+     */
+    public function setLastUpdate(\DateTime $lastUpdate)
+    {
+        $this->lastUpdate = $lastUpdate;
+
+        return $this;
+    }
+
+    public function logCreation()
+    {
+        $creationDate = new \DateTime();
+
+        $this->setCreation($creationDate);
+        $this->setLastUpdate($creationDate);
+    }
+
+    public function logUpdate()
+    {
+        $this->setLastUpdate(new \DateTime());
     }
 }
