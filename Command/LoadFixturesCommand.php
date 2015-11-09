@@ -87,7 +87,7 @@ class LoadFixturesCommand extends ContainerAwareCommand
 
         $files = array();
         foreach($project['fixtures'] as $fixture) {
-            $files[] = $baseDir . $fixture['resource'];
+            $files[] = 'src/' . $baseDir . $fixture['resource'];
         }
 
         $vendor = $this->getContainer()->getParameter('vendor');
