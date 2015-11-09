@@ -31,6 +31,8 @@ class LoadFixturesCommand extends ContainerAwareCommand
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
+        $this->createAdditionalSchemas();
+
         $metadata = $this->getEntityManager()->getMetadataFactory()->getAllMetadata();
 
         if (!empty($metadata)) {
@@ -43,6 +45,20 @@ class LoadFixturesCommand extends ContainerAwareCommand
         $fixtures = $manager->loadFiles($this->getFixturesFiles());
 
         $manager->persist($fixtures);
+    }
+
+    private function createAdditionalSchemas()
+    {
+        $schemaManager = $this->getEntityManager()->getConnection()->getSchemaManager();
+        $schemas = $this->getContainer()->getParameter('additional_schemas');
+
+        foreach($schemas as $name)
+        {
+            $shouldCreateDatabase = !in_array($name, $schemaManager->listDatabases());
+            if($shouldCreateDatabase) {
+                $schemaManager->createDatabase($name);
+            }
+        }
     }
 
     /**
@@ -66,10 +82,17 @@ class LoadFixturesCommand extends ContainerAwareCommand
      */
     private function getFixturesFiles()
     {
-        $baseDir = $this->getContainer()->getParameter('base_dir');
+        $project = $this->getContainer()->getParameter('project');
+        $baseDir = array_key_exists('base_dir', $project) ? $project['base_dir'] : null;
+
         $files = array();
-        foreach($this->getContainer()->getParameter('fixtures') as $fixture) {
+        foreach($project['fixtures'] as $fixture) {
             $files[] = $baseDir . $fixture['resource'];
+        }
+
+        $vendor = $this->getContainer()->getParameter('vendor');
+        foreach($vendor['fixtures'] as $fixture) {
+            $files[] = 'vendor/' . $fixture['resource'];
         }
 
         return $files;
