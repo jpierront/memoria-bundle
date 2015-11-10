@@ -31,7 +31,9 @@ class LoadFixturesCommand extends ContainerAwareCommand
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $this->createAdditionalSchemas();
+        if($this->getContainer()->hasParameter('additional_schemas')) {
+            $this->createAdditionalSchemas();
+        }
 
         $metadata = $this->getEntityManager()->getMetadataFactory()->getAllMetadata();
 
@@ -90,9 +92,11 @@ class LoadFixturesCommand extends ContainerAwareCommand
             $files[] = 'src/' . $baseDir . $fixture['resource'];
         }
 
-        $vendor = $this->getContainer()->getParameter('vendor');
-        foreach($vendor['fixtures'] as $fixture) {
-            $files[] = 'vendor/' . $fixture['resource'];
+        if($this->getContainer()->hasParameter('vendor')) {
+            $vendor = $this->getContainer()->getParameter('vendor');
+            foreach($vendor['fixtures'] as $fixture) {
+                $files[] = 'vendor/' . $fixture['resource'];
+            }
         }
 
         return $files;
