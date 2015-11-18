@@ -31,7 +31,8 @@ class LoadFixturesCommand extends ContainerAwareCommand
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        if($this->getContainer()->hasParameter('additional_schemas')) {
+        if ($this->getContainer()->hasParameter('additional_schemas')) {
+            $this->deleteAdditionalSchemas();
             $this->createAdditionalSchemas();
         }
 
@@ -43,22 +44,52 @@ class LoadFixturesCommand extends ContainerAwareCommand
             $tool->createSchema($metadata);
         }
 
+        if (!empty($metadata)) {
+            $tool = new SchemaTool($this->getContainer()->get('doctrine')->getManager('fakemobiparade'));
+            $tool->dropSchema($metadata);
+            $tool->createSchema($metadata);
+        }
+
+        if (!empty($metadata)) {
+            $tool = new SchemaTool($this->getContainer()->get('doctrine')->getManager('fakesetupmisc'));
+            $tool->dropSchema($metadata);
+            $tool->createSchema($metadata);
+        }
+
         $manager  = $this->getFixtureManager();
         $fixtures = $manager->loadFiles($this->getFixturesFiles());
 
         $manager->persist($fixtures);
     }
 
+    /**
+     * Create the defined additional schemas
+     */
     private function createAdditionalSchemas()
     {
         $schemaManager = $this->getEntityManager()->getConnection()->getSchemaManager();
-        $schemas = $this->getContainer()->getParameter('additional_schemas');
+        $schemas       = $this->getContainer()->getParameter('additional_schemas');
 
-        foreach($schemas as $name)
-        {
+        foreach ($schemas as $name) {
             $shouldCreateDatabase = !in_array($name, $schemaManager->listDatabases());
-            if($shouldCreateDatabase) {
+            if ($shouldCreateDatabase) {
                 $schemaManager->createDatabase($name);
+            }
+        }
+    }
+
+    /**
+     * Delete the defined additional schemas
+     */
+    private function deleteAdditionalSchemas()
+    {
+        $schemaManager = $this->getEntityManager()->getConnection()->getSchemaManager();
+        $schemas       = $this->getContainer()->getParameter('additional_schemas');
+
+        foreach ($schemas as $name) {
+            $shouldCreateDatabase = in_array($name, $schemaManager->listDatabases());
+            if ($shouldCreateDatabase) {
+                $schemaManager->dropDatabase($name);
             }
         }
     }
@@ -88,14 +119,14 @@ class LoadFixturesCommand extends ContainerAwareCommand
         $baseDir = array_key_exists('base_dir', $project) ? $project['base_dir'] : null;
 
         $files = array();
-        foreach($project['fixtures'] as $fixture) {
-            $files[] = 'src/' . $baseDir . $fixture['resource'];
+        foreach ($project['fixtures'] as $fixture) {
+            $files[] = 'src/'.$baseDir.$fixture['resource'];
         }
 
-        if($this->getContainer()->hasParameter('vendor')) {
+        if ($this->getContainer()->hasParameter('vendor')) {
             $vendor = $this->getContainer()->getParameter('vendor');
-            foreach($vendor['fixtures'] as $fixture) {
-                $files[] = 'vendor/' . $fixture['resource'];
+            foreach ($vendor['fixtures'] as $fixture) {
+                $files[] = 'vendor/'.$fixture['resource'];
             }
         }
 
