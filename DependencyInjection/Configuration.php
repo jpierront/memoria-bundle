@@ -22,7 +22,7 @@ class Configuration implements ConfigurationInterface
 
         $rootNode
             ->children()
-                ->arrayNode('additional_schemas')
+                ->arrayNode('additional_entity_managers')
                     ->prototype('scalar')->defaultNull()->end()
                 ->end()
                 ->arrayNode('project')
