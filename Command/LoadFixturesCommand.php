@@ -2,6 +2,7 @@
 
 namespace CuteNinja\MemoriaBundle\Command;
 
+use Doctrine\DBAL\Exception\ConnectionException;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\Tools\SchemaTool;
 use h4cc\AliceFixturesBundle\Fixtures\FixtureManager;
@@ -31,29 +32,22 @@ class LoadFixturesCommand extends ContainerAwareCommand
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        if ($this->getContainer()->hasParameter('additional_schemas')) {
+        $entityManagers = ['default'];
+
+        if ($this->getContainer()->hasParameter('additional_entity_managers')) {
             $this->deleteAdditionalSchemas();
             $this->createAdditionalSchemas();
+            $entityManagers = array_unique(array_merge($entityManagers, $this->getContainer()->getParameter('additional_entity_managers')));
         }
 
         $metadata = $this->getEntityManager()->getMetadataFactory()->getAllMetadata();
 
         if (!empty($metadata)) {
-            $tool = new SchemaTool($this->getEntityManager());
-            $tool->dropSchema($metadata);
-            $tool->createSchema($metadata);
-        }
-
-        if (!empty($metadata)) {
-            $tool = new SchemaTool($this->getContainer()->get('doctrine')->getManager('fakemobiparade'));
-            $tool->dropSchema($metadata);
-            $tool->createSchema($metadata);
-        }
-
-        if (!empty($metadata)) {
-            $tool = new SchemaTool($this->getContainer()->get('doctrine')->getManager('fakesetupmisc'));
-            $tool->dropSchema($metadata);
-            $tool->createSchema($metadata);
+            foreach ($entityManagers as $entityManagerName) {
+                $tool = new SchemaTool($this->getEntityManager($entityManagerName));
+                $tool->dropSchema($metadata);
+                $tool->createSchema($metadata);
+            }
         }
 
         $manager  = $this->getFixtureManager();
@@ -67,13 +61,28 @@ class LoadFixturesCommand extends ContainerAwareCommand
      */
     private function createAdditionalSchemas()
     {
-        $schemaManager = $this->getEntityManager()->getConnection()->getSchemaManager();
-        $schemas       = $this->getContainer()->getParameter('additional_schemas');
+        $additionalEntityManagers = $this->getContainer()->getParameter('additional_entity_managers');
+        $defaultConnexion         = $this->getEntityManager()->getConnection();
 
-        foreach ($schemas as $name) {
-            $shouldCreateDatabase = !in_array($name, $schemaManager->listDatabases());
+        foreach ($additionalEntityManagers as $additionalEntityManagerName) {
+
+            $customConnexion     = $this->getEntityManager($additionalEntityManagerName)->getConnection();
+            $connexionParameters = $customConnexion->getParams();
+
+            $databaseName = isset($connexionParameters['dbname']) ? $connexionParameters['dbname'] : null;
+
+            if (!$databaseName) {
+                throw new \InvalidArgumentException("'dbname' parameter missing.");
+            }
+
+            try {
+                $shouldCreateDatabase = !in_array($databaseName, $customConnexion->getSchemaManager()->listDatabases());
+            } catch (ConnectionException $e) {
+                $shouldCreateDatabase = true;
+            }
+
             if ($shouldCreateDatabase) {
-                $schemaManager->createDatabase($name);
+                $defaultConnexion->getSchemaManager()->createDatabase($databaseName);
             }
         }
     }
@@ -83,13 +92,28 @@ class LoadFixturesCommand extends ContainerAwareCommand
      */
     private function deleteAdditionalSchemas()
     {
-        $schemaManager = $this->getEntityManager()->getConnection()->getSchemaManager();
-        $schemas       = $this->getContainer()->getParameter('additional_schemas');
+        $additionalEntityManagers = $this->getContainer()->getParameter('additional_entity_managers');
+        $defaultConnexion         = $this->getEntityManager()->getConnection();
 
-        foreach ($schemas as $name) {
-            $shouldCreateDatabase = in_array($name, $schemaManager->listDatabases());
-            if ($shouldCreateDatabase) {
-                $schemaManager->dropDatabase($name);
+        foreach ($additionalEntityManagers as $additionalEntityManagerName) {
+
+            $customConnexion     = $this->getEntityManager($additionalEntityManagerName)->getConnection();
+            $connexionParameters = $customConnexion->getParams();
+
+            $databaseName = isset($connexionParameters['dbname']) ? $connexionParameters['dbname'] : null;
+
+            if (!$databaseName) {
+                throw new \InvalidArgumentException("'dbname' parameter missing.");
+            }
+
+            try {
+                $shouldDropDatabase = in_array($databaseName, $customConnexion->getSchemaManager()->listDatabases());
+            } catch (ConnectionException $e) {
+                $shouldDropDatabase = false;
+            }
+
+            if ($shouldDropDatabase) {
+                $defaultConnexion->getSchemaManager()->dropDatabase($databaseName);
             }
         }
     }
@@ -97,9 +121,9 @@ class LoadFixturesCommand extends ContainerAwareCommand
     /**
      * @return EntityManager
      */
-    private function getEntityManager()
+    private function getEntityManager($managerName = 'default')
     {
-        return $this->getContainer()->get('doctrine')->getManager();
+        return $this->getContainer()->get('doctrine')->getManager($managerName);
     }
 
     /**
