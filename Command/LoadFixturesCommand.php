@@ -62,27 +62,27 @@ class LoadFixturesCommand extends ContainerAwareCommand
     private function createAdditionalSchemas()
     {
         $additionalEntityManagers = $this->getContainer()->getParameter('additional_entity_managers');
-        $defaultConnexion         = $this->getEntityManager()->getConnection();
+        $defaultConnection         = $this->getEntityManager()->getConnection();
 
         foreach ($additionalEntityManagers as $additionalEntityManagerName) {
 
-            $customConnexion     = $this->getEntityManager($additionalEntityManagerName)->getConnection();
-            $connexionParameters = $customConnexion->getParams();
+            $customConnection     = $this->getEntityManager($additionalEntityManagerName)->getConnection();
+            $connectionParameters = $customConnection->getParams();
 
-            $databaseName = isset($connexionParameters['dbname']) ? $connexionParameters['dbname'] : null;
+            $databaseName = isset($connectionParameters['dbname']) ? $connectionParameters['dbname'] : null;
 
             if (!$databaseName) {
                 throw new \InvalidArgumentException("'dbname' parameter missing.");
             }
 
             try {
-                $shouldCreateDatabase = !in_array($databaseName, $customConnexion->getSchemaManager()->listDatabases());
+                $shouldCreateDatabase = !in_array($databaseName, $customConnection->getSchemaManager()->listDatabases());
             } catch (ConnectionException $e) {
                 $shouldCreateDatabase = true;
             }
 
             if ($shouldCreateDatabase) {
-                $defaultConnexion->getSchemaManager()->createDatabase($databaseName);
+                $defaultConnection->getSchemaManager()->createDatabase($databaseName);
             }
         }
     }
@@ -93,27 +93,27 @@ class LoadFixturesCommand extends ContainerAwareCommand
     private function deleteAdditionalSchemas()
     {
         $additionalEntityManagers = $this->getContainer()->getParameter('additional_entity_managers');
-        $defaultConnexion         = $this->getEntityManager()->getConnection();
+        $defaultConnection         = $this->getEntityManager()->getConnection();
 
         foreach ($additionalEntityManagers as $additionalEntityManagerName) {
 
-            $customConnexion     = $this->getEntityManager($additionalEntityManagerName)->getConnection();
-            $connexionParameters = $customConnexion->getParams();
+            $customConnection     = $this->getEntityManager($additionalEntityManagerName)->getConnection();
+            $connectionParameters = $customConnection->getParams();
 
-            $databaseName = isset($connexionParameters['dbname']) ? $connexionParameters['dbname'] : null;
+            $databaseName = isset($connectionParameters['dbname']) ? $connectionParameters['dbname'] : null;
 
             if (!$databaseName) {
                 throw new \InvalidArgumentException("'dbname' parameter missing.");
             }
 
             try {
-                $shouldDropDatabase = in_array($databaseName, $customConnexion->getSchemaManager()->listDatabases());
+                $shouldDropDatabase = in_array($databaseName, $customConnection->getSchemaManager()->listDatabases());
             } catch (ConnectionException $e) {
                 $shouldDropDatabase = false;
             }
 
             if ($shouldDropDatabase) {
-                $defaultConnexion->getSchemaManager()->dropDatabase($databaseName);
+                $defaultConnection->getSchemaManager()->dropDatabase($databaseName);
             }
         }
     }
@@ -143,16 +143,17 @@ class LoadFixturesCommand extends ContainerAwareCommand
         $baseDir = array_key_exists('base_dir', $project) ? $project['base_dir'] : null;
 
         $files = array();
-        foreach ($project['fixtures'] as $fixture) {
-            $files[] = 'src/'.$baseDir.$fixture['resource'];
-        }
-
         if ($this->getContainer()->hasParameter('vendor')) {
             $vendor = $this->getContainer()->getParameter('vendor');
             foreach ($vendor['fixtures'] as $fixture) {
                 $files[] = 'vendor/'.$fixture['resource'];
             }
         }
+
+        foreach ($project['fixtures'] as $fixture) {
+            $files[] = 'src/'.$baseDir.$fixture['resource'];
+        }
+
 
         return $files;
     }
