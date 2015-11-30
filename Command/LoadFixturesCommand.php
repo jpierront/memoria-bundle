@@ -34,20 +34,9 @@ class LoadFixturesCommand extends ContainerAwareCommand
     {
         $entityManagers = ['default'];
 
-        if ($this->getContainer()->hasParameter('additional_entity_managers')) {
-            $this->deleteAdditionalSchemas();
-            $this->createAdditionalSchemas();
-            $entityManagers = array_unique(array_merge($entityManagers, $this->getContainer()->getParameter('additional_entity_managers')));
-        }
-
-        $metadata = $this->getEntityManager()->getMetadataFactory()->getAllMetadata();
-
-        if (!empty($metadata)) {
-            foreach ($entityManagers as $entityManagerName) {
-                $tool = new SchemaTool($this->getEntityManager($entityManagerName));
-                $tool->dropSchema($metadata);
-                $tool->createSchema($metadata);
-            }
+        if ($additionalEntityManagers = $this->getContainer()->getParameter('additional_entity_managers')) {
+            $entityManagers = array_unique(array_merge($entityManagers, $additionalEntityManagers));
+            $this->generateSchemas($entityManagers);
         }
 
         $manager  = $this->getFixtureManager();
@@ -57,16 +46,14 @@ class LoadFixturesCommand extends ContainerAwareCommand
     }
 
     /**
-     * Create the defined additional schemas
+     * @param array $entityManagers
      */
-    private function createAdditionalSchemas()
+    private function generateSchemas(array $entityManagers)
     {
-        $additionalEntityManagers = $this->getContainer()->getParameter('additional_entity_managers');
-        $defaultConnection         = $this->getEntityManager()->getConnection();
+        $defaultConnection = $this->getEntityManager()->getConnection();
 
-        foreach ($additionalEntityManagers as $additionalEntityManagerName) {
-
-            $customConnection     = $this->getEntityManager($additionalEntityManagerName)->getConnection();
+        foreach ($entityManagers as $entityManager) {
+            $customConnection     = $this->getEntityManager($entityManager)->getConnection();
             $connectionParameters = $customConnection->getParams();
 
             $databaseName = isset($connectionParameters['dbname']) ? $connectionParameters['dbname'] : null;
@@ -82,38 +69,7 @@ class LoadFixturesCommand extends ContainerAwareCommand
             }
 
             if ($shouldCreateDatabase) {
-                $defaultConnection->getSchemaManager()->createDatabase($databaseName);
-            }
-        }
-    }
-
-    /**
-     * Delete the defined additional schemas
-     */
-    private function deleteAdditionalSchemas()
-    {
-        $additionalEntityManagers = $this->getContainer()->getParameter('additional_entity_managers');
-        $defaultConnection         = $this->getEntityManager()->getConnection();
-
-        foreach ($additionalEntityManagers as $additionalEntityManagerName) {
-
-            $customConnection     = $this->getEntityManager($additionalEntityManagerName)->getConnection();
-            $connectionParameters = $customConnection->getParams();
-
-            $databaseName = isset($connectionParameters['dbname']) ? $connectionParameters['dbname'] : null;
-
-            if (!$databaseName) {
-                throw new \InvalidArgumentException("'dbname' parameter missing.");
-            }
-
-            try {
-                $shouldDropDatabase = in_array($databaseName, $customConnection->getSchemaManager()->listDatabases());
-            } catch (ConnectionException $e) {
-                $shouldDropDatabase = false;
-            }
-
-            if ($shouldDropDatabase) {
-                $defaultConnection->getSchemaManager()->dropDatabase($databaseName);
+                $defaultConnection->getSchemaManager()->dropAndCreateDatabase($databaseName);
             }
         }
     }
@@ -146,14 +102,13 @@ class LoadFixturesCommand extends ContainerAwareCommand
         if ($this->getContainer()->hasParameter('vendor')) {
             $vendor = $this->getContainer()->getParameter('vendor');
             foreach ($vendor['fixtures'] as $fixture) {
-                $files[] = 'vendor/'.$fixture['resource'];
+                $files[] = 'vendor/' . $fixture['resource'];
             }
         }
 
         foreach ($project['fixtures'] as $fixture) {
-            $files[] = 'src/'.$baseDir.$fixture['resource'];
+            $files[] = 'src/' . $baseDir . $fixture['resource'];
         }
-
 
         return $files;
     }
