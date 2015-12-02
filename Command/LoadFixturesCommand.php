@@ -2,6 +2,7 @@
 
 namespace CuteNinja\MemoriaBundle\Command;
 
+use Doctrine\DBAL\Exception\ConnectionException;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\Tools\SchemaTool;
 use h4cc\AliceFixturesBundle\Fixtures\FixtureManager;
@@ -31,16 +32,11 @@ class LoadFixturesCommand extends ContainerAwareCommand
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        if($this->getContainer()->hasParameter('additional_schemas')) {
-            $this->createAdditionalSchemas();
-        }
+        $entityManagers = ['default'];
 
-        $metadata = $this->getEntityManager()->getMetadataFactory()->getAllMetadata();
-
-        if (!empty($metadata)) {
-            $tool = new SchemaTool($this->getEntityManager());
-            $tool->dropSchema($metadata);
-            $tool->createSchema($metadata);
+        if ($additionalEntityManagers = $this->getContainer()->getParameter('additional_entity_managers')) {
+            $entityManagers = array_unique(array_merge($entityManagers, $additionalEntityManagers));
+            $this->generateSchemas($entityManagers);
         }
 
         $manager  = $this->getFixtureManager();
@@ -49,26 +45,46 @@ class LoadFixturesCommand extends ContainerAwareCommand
         $manager->persist($fixtures);
     }
 
-    private function createAdditionalSchemas()
+    /**
+     * @param array $entityManagers
+     */
+    private function generateSchemas(array $entityManagers)
     {
-        $schemaManager = $this->getEntityManager()->getConnection()->getSchemaManager();
-        $schemas = $this->getContainer()->getParameter('additional_schemas');
+        $defaultConnection = $this->getEntityManager()->getConnection();
+        $metadata = $this->getEntityManager()->getMetadataFactory()->getAllMetadata();
 
-        foreach($schemas as $name)
-        {
-            $shouldCreateDatabase = !in_array($name, $schemaManager->listDatabases());
-            if($shouldCreateDatabase) {
-                $schemaManager->createDatabase($name);
+        foreach ($entityManagers as $entityManager) {
+            $customConnection     = $this->getEntityManager($entityManager)->getConnection();
+            $connectionParameters = $customConnection->getParams();
+
+            $databaseName = isset($connectionParameters['dbname']) ? $connectionParameters['dbname'] : null;
+
+            if (!$databaseName) {
+                throw new \InvalidArgumentException("'dbname' parameter missing.");
             }
+
+            try {
+                $shouldCreateDatabase = !in_array($databaseName, $customConnection->getSchemaManager()->listDatabases());
+            } catch (ConnectionException $e) {
+                $shouldCreateDatabase = true;
+            }
+
+            if ($shouldCreateDatabase) {
+                $defaultConnection->getSchemaManager()->dropAndCreateDatabase($databaseName);
+            }
+
+            $tool = new SchemaTool($this->getEntityManager($entityManager));
+            $tool->dropSchema($metadata);
+            $tool->createSchema($metadata);
         }
     }
 
     /**
      * @return EntityManager
      */
-    private function getEntityManager()
+    private function getEntityManager($managerName = 'default')
     {
-        return $this->getContainer()->get('doctrine')->getManager();
+        return $this->getContainer()->get('doctrine')->getManager($managerName);
     }
 
     /**
@@ -88,15 +104,15 @@ class LoadFixturesCommand extends ContainerAwareCommand
         $baseDir = array_key_exists('base_dir', $project) ? $project['base_dir'] : null;
 
         $files = array();
-        foreach($project['fixtures'] as $fixture) {
-            $files[] = 'src/' . $baseDir . $fixture['resource'];
-        }
-
-        if($this->getContainer()->hasParameter('vendor')) {
+        if ($this->getContainer()->hasParameter('vendor')) {
             $vendor = $this->getContainer()->getParameter('vendor');
-            foreach($vendor['fixtures'] as $fixture) {
+            foreach ($vendor['fixtures'] as $fixture) {
                 $files[] = 'vendor/' . $fixture['resource'];
             }
+        }
+
+        foreach ($project['fixtures'] as $fixture) {
+            $files[] = 'src/' . $baseDir . $fixture['resource'];
         }
 
         return $files;
