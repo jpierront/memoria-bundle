@@ -22,8 +22,8 @@ class CuteNinjaMemoriaExtension extends Extension
         $configuration = new Configuration();
         $config = $this->processConfiguration($configuration, $configs);
 
-        if(!empty($config['additional_schemas'])) {
-            $container->setParameter('additional_schemas', $config['additional_schemas']);
+        if(!empty($config['additional_entity_managers'])) {
+            $container->setParameter('additional_entity_managers', $config['additional_entity_managers']);
         }
 
         if(!empty($config['project'])) {
