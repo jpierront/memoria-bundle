@@ -22,10 +22,6 @@ class CuteNinjaMemoriaExtension extends Extension
         $configuration = new Configuration();
         $config        = $this->processConfiguration($configuration, $configs);
 
-        if (!empty($config['console_path'])) {
-            $container->setParameter('console_path', $config['console_path']);
-        }
-
         if (!empty($config['additional_entity_managers'])) {
             $container->setParameter('additional_entity_managers', $config['additional_entity_managers']);
         }

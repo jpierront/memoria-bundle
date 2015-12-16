@@ -22,9 +22,6 @@ class Configuration implements ConfigurationInterface
 
         $rootNode
             ->children()
-                ->scalarNode('console_path')
-                    ->isRequired(true)
-                ->end()
                 ->arrayNode('additional_entity_managers')
                     ->prototype('scalar')->defaultNull()->end()
                 ->end()
