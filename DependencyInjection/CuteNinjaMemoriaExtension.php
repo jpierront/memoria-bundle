@@ -20,21 +20,21 @@ class CuteNinjaMemoriaExtension extends Extension
     public function load(array $configs, ContainerBuilder $container)
     {
         $configuration = new Configuration();
-        $config = $this->processConfiguration($configuration, $configs);
+        $config        = $this->processConfiguration($configuration, $configs);
 
-        if(!empty($config['additional_entity_managers'])) {
+        if (!empty($config['console_path'])) {
+            $container->setParameter('console_path', $config['console_path']);
+        }
+
+        if (!empty($config['additional_entity_managers'])) {
             $container->setParameter('additional_entity_managers', $config['additional_entity_managers']);
         }
 
-        if(!empty($config['project'])) {
-            $container->setParameter('project', $config['project']);
+        if (!empty($config['fixtures'])) {
+            $container->setParameter('fixtures', $config['fixtures']);
         }
 
-        if(!empty($config['vendor'])) {
-            $container->setParameter('vendor', $config['vendor']);
-        }
-
-        $loader = new Loader\YamlFileLoader($container, new FileLocator(__DIR__.'/../Resources/config'));
+        $loader = new Loader\YamlFileLoader($container, new FileLocator(__DIR__ . '/../Resources/config'));
         $loader->load('services.yml');
     }
 }

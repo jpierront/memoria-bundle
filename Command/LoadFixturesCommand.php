@@ -100,19 +100,11 @@ class LoadFixturesCommand extends ContainerAwareCommand
      */
     private function getFixturesFiles()
     {
-        $project = $this->getContainer()->getParameter('project');
-        $baseDir = array_key_exists('base_dir', $project) ? $project['base_dir'] : null;
-
         $files = array();
-        if ($this->getContainer()->hasParameter('vendor')) {
-            $vendor = $this->getContainer()->getParameter('vendor');
-            foreach ($vendor['fixtures'] as $fixture) {
-                $files[] = 'vendor/' . $fixture['resource'];
-            }
-        }
+        $fixtures = $this->getContainer()->getParameter('fixtures');
 
-        foreach ($project['fixtures'] as $fixture) {
-            $files[] = 'src/' . $baseDir . $fixture['resource'];
+        foreach ($fixtures as $fixture) {
+            $files[] = $fixture['resource'];
         }
 
         return $files;
