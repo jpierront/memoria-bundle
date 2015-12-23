@@ -34,10 +34,11 @@ class LoadFixturesCommand extends ContainerAwareCommand
     {
         $entityManagers = ['default'];
 
-        if ($additionalEntityManagers = $this->getContainer()->getParameter('additional_entity_managers')) {
-            $entityManagers = array_unique(array_merge($entityManagers, $additionalEntityManagers));
-            $this->generateSchemas($entityManagers);
+        if ($this->getContainer()->hasParameter('additional_entity_managers')) {
+            $entityManagers = array_unique(array_merge($entityManagers, $this->getContainer()->getParameter('additional_entity_managers')));
         }
+
+        $this->generateSchemas($entityManagers);
 
         $manager  = $this->getFixtureManager();
         $fixtures = $manager->loadFiles($this->getFixturesFiles());
