@@ -2,6 +2,7 @@
 
 namespace CuteNinja\MemoriaBundle\Command;
 
+use Doctrine\DBAL\DBALException;
 use Doctrine\DBAL\Exception\ConnectionException;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\Tools\SchemaTool;
@@ -67,6 +68,8 @@ class LoadFixturesCommand extends ContainerAwareCommand
             try {
                 $shouldCreateDatabase = !in_array($databaseName, $customConnection->getSchemaManager()->listDatabases());
             } catch (ConnectionException $e) {
+                $shouldCreateDatabase = true;
+            } catch (DBALException $e) {
                 $shouldCreateDatabase = true;
             }
 
